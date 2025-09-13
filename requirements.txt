@@ -1,8 +1,0 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-faster-whisper==1.0.3
-torch==2.7.1
-firebase-admin==6.5.0
-python-multipart==0.0.9
-python-dotenv==1.0.1
-google-cloud-storage==2.17.0  # Extra for Firebase Storage support
