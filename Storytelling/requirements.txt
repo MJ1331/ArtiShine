@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+firebase-admin
+google-cloud-storage
+langchain
+langchain-core
+langchain-openai
+python-multipart
