@@ -7,3 +7,5 @@ langchain
 langchain-core
 langchain-openai
 python-multipart
+faster-whisper==1.0.3
+python-multipart==0.0.9
