@@ -5,17 +5,12 @@ load_dotenv()
 import logging
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from services.transcribe_audio import load_model
 from utils.firebase import init_firebase, get_db
 from datetime import datetime
 
 # Firebase Admin SDK initialization
 import firebase_admin
 from firebase_admin import credentials
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-if not firebase_admin._apps:
-    cred = credentials.Certificate(GOOGLE_APPLICATION_CREDENTIALS)
-    firebase_admin.initialize_app(cred)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -39,8 +34,6 @@ from routes.story_router import router as story_router
 @app.on_event("startup")
 async def startup_event():
     try:
-        load_model()
-        logger.info("Model loaded successfully")
         # Test Firebase connections
         db = get_db()
         db.collection('test').document('ping').set({'status': 'ok'})
