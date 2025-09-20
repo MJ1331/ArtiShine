@@ -1,5 +1,5 @@
 # Ignore credentials and secrets
-
+serviceAccountKey.json
 
 # Python cache
 __pycache__/
