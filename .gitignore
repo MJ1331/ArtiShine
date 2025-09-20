@@ -1,4 +1,6 @@
-service_account_Key.json
+# Ignore credentials and secrets
+
+
 # Python cache
 __pycache__/
 *.pyc

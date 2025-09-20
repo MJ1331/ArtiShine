@@ -1,41 +1,22 @@
 # main.py
-import os
+
 from dotenv import load_dotenv
+
+# This MUST be the first line to ensure variables are loaded
 load_dotenv()
 
-import logging
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from routes.onboarding_routes import router as onboarding_router
 
-# Import Firebase and initialize it here, once, at startup.
-import firebase_admin
-from firebase_admin import credentials
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-if not firebase_admin._apps:
-    cred = credentials.Certificate(GOOGLE_APPLICATION_CREDENTIALS)
-    firebase_admin.initialize_app(cred)
-
-# Import your new router
-from routes.story_router import router as story_router
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("storytelling_app")
-
-app = FastAPI(title="Artisan Storytelling API")
-
-# Add Middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], # Or specify your frontend URL for better security
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+app = FastAPI(
+    title="Artisan Onboarding Agent API",
+    description="An API to generate welcome captions and images for new artisans.",
+    version="2.0.0"
 )
 
-# Include your routes
-app.include_router(story_router)
+# Include the router from the routes file
+app.include_router(onboarding_router)
 
-@app.get("/", tags=["Root"])
-async def read_root():
-    return {"message": "Welcome to the Artisan Storytelling API"}
+@app.get("/", include_in_schema=False)
+async def root():
+    return {"message": "Welcome! Visit /docs for the API documentation."}
