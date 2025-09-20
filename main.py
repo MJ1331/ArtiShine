@@ -1,16 +1,18 @@
 # main.py
+
 from fastapi import FastAPI
-# UPDATED: Import from the new routes filename
-from routes.insta_onboarding_routes import router as onboarding_router
+# Import the router from your routes file
+from routes.insta_product_routes import router as product_router
 
 app = FastAPI(
-    title="Artishine Instagram Poster",
-    description="An API to post an artisan's onboarding content to Instagram."
+    title="Artishine Product Story Poster",
+    description="An API to fetch product stories and post them to Instagram.",
+    version="1.0.0"
 )
 
 # Include the router from the routes file
-app.include_router(onboarding_router)
+app.include_router(product_router)
 
-@app.get("/")
+@app.get("/", tags=["Root"])
 def read_root():
-    return {"message": "Welcome to the Artishine Instagram Poster API. Go to /docs for the API documentation."}
+    return {"message": "Welcome to the Artishine API. Go to /docs for documentation."}
