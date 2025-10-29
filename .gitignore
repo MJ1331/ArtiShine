@@ -12,3 +12,4 @@ serviceAccountKey.json
 
 # VS Code settings
 .vscode/
+/venv

@@ -29,6 +29,8 @@ async def generate_and_post_onboarding(user_id: str) -> dict:
         name = artisan_data['name']
         shop_name = artisan_data['shop_name']
         location = artisan_data['place'] # From your new model
+        latitude = artisan_data.get('latitude')
+        longitude = artisan_data.get('longitude')
         
         # Your workflow gets DOB as 'DD-MM-YYYY'
         dob_obj = datetime.datetime.strptime(artisan_data['date_of_birth'], '%d-%m-%Y')
@@ -41,10 +43,14 @@ async def generate_and_post_onboarding(user_id: str) -> dict:
     # 2. Generate content using Google Cloud
     try:
         # --- Generate Caption (using Vertex AI) ---
+        location_context = f"located in {location}"
+        if latitude and longitude:
+            location_context += f" (coordinates: {latitude}, {longitude})"
+
         prompt = f"""
-        You are an expert content creator for ArtiShine. 
-        Create a warm welcome caption for our platform. 
-        Introduce the artisan, {name}, and their shop, {shop_name}, located in {location}. 
+        You are an expert content creator for ArtiShine.
+        Create a warm welcome caption for our platform.
+        Introduce the artisan, {name}, and their shop, {shop_name}, {location_context}.
         It's important to feature the artisan's name prominently.
         Return a clean JSON object with 'caption' and 'hashtags' keys.
         """

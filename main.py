@@ -20,12 +20,12 @@ app = FastAPI(
 app.include_router(
     user_routes.router, 
     prefix="/users", 
-    tags=["1. User Onboarding Workflow"]
+    tags=["1. User Routes"]
 )
 app.include_router(
     product_routes.router, 
     prefix="/products", 
-    tags=["2. New Product Workflow"]
+    tags=["2. Product Routes"]
 )
 
 @app.get("/", tags=["Root"])
