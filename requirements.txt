@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic
+firebase-admin
+google-cloud-aiplatform
+google-cloud-speech
+google-cloud-translate
+google-cloud-storage
+instagrapi
+Pillow
+python-dotenv
+requests
+google-generativeai
