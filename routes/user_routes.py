@@ -82,6 +82,17 @@ async def get_buyer_by_id_endpoint(user_id: str):
     """
     return await user_service.get_buyer_by_id(user_id)
 
+@router.get("/profile/{user_id}",
+    summary="Get User Profile with Products",
+    description="Retrieves a user's complete profile along with all their products (if artisan)."
+)
+async def get_user_profile_with_products_endpoint(user_id: str):
+    """
+    Returns user details and their products for the specified user_id.
+    Works for both artisans (with products) and buyers.
+    """
+    return await user_service.get_user_with_products(user_id)
+
 @router.get("/buyers/me",
     summary="Get My Buyer Profile",
     description="Retrieves the complete details of the authenticated buyer."

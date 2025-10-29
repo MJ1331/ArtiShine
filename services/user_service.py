@@ -267,3 +267,58 @@ async def get_buyer_by_id(user_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve buyer: {str(e)}")
+
+async def get_user_with_products(user_id: str):
+    """
+    Retrieves a user's details along with all their products.
+    Works for both artisans and buyers.
+    """
+    if not db:
+        raise HTTPException(status_code=500, detail="Firebase is not initialized.")
+
+    try:
+        # First, try to get user from artisans collection
+        user_data = None
+        user_role = None
+
+        artisan_ref = db.collection("artisans").document(user_id)
+        artisan_doc = artisan_ref.get()
+
+        if artisan_doc.exists:
+            user_data = artisan_doc.to_dict()
+            user_data["user_id"] = artisan_doc.id
+            user_role = "artisan"
+        else:
+            # If not found in artisans, try buyers collection
+            buyer_ref = db.collection("buyers").document(user_id)
+            buyer_doc = buyer_ref.get()
+
+            if buyer_doc.exists:
+                user_data = buyer_doc.to_dict()
+                user_data["user_id"] = buyer_doc.id
+                user_role = "buyer"
+            else:
+                raise HTTPException(status_code=404, detail="User not found.")
+
+        # Get products if user is an artisan
+        products = []
+        if user_role == "artisan":
+            products_ref = db.collection("product_stories").document(user_id).collection("products")
+            products_docs = products_ref.stream()
+
+            for product_doc in products_docs:
+                product_data = product_doc.to_dict()
+                product_data["product_id"] = product_doc.id
+                products.append(product_data)
+
+        return {
+            "user": user_data,
+            "role": user_role,
+            "products": products,
+            "total_products": len(products)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve user with products: {str(e)}")
