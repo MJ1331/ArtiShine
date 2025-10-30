@@ -121,7 +121,7 @@ def _generate_and_upload_image(user_id: str, name: str, dob_str: str, shop_name:
         
         W, H = image.size
         y = 250
-        rainbow_colors=[(148,0,211),(75,0,130),(0,0,255),(0,255,0),(255,255,0),(255,127,0),(255,0,0)]
+        rainbow_colors=[(148,0,211),(75,0,130),(0,0,255),(0,255,0),(255,20,147),(255,127,0),(255,0,0)]
         
         for (label, value, size, extra_space, rainbow) in lines:
             font = ImageFont.truetype(font_path, size)
