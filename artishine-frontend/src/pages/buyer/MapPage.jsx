@@ -6,16 +6,15 @@ import PrimaryButton from '../../components/PrimaryButton';
 import Navigation from '../../components/Navigation';
 import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from '@react-google-maps/api';
 
+// --- 1. IMPORT THE CANVAS BACKGROUND ---
+import CanvasBackground from '../../components/CanvasBackground';
+
 const MapPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArtisan, setSelectedArtisan] = useState(null);
-  // Use coordinates from sampleData
   const artisans = sampleData.artisans;
-
-  // Extract all coordinates for bounds calculation
   const coordinates = artisans.map(a => a.coordinates);
 
-  // Calculate map bounds to fit all pins
   const getMapBounds = (coords) => {
     const lats = coords.map(c => c.lat);
     const lngs = coords.map(c => c.lng);
@@ -27,11 +26,9 @@ const MapPage = () => {
     };
   };
 
-  // Center map to India and zoom to fit all pins
   const defaultCenter = { lat: 22.9734, lng: 78.6569 };
   const bounds = getMapBounds(coordinates);
 
-  // Google Maps API key (replace with your own)
   const GOOGLE_MAPS_API_KEY = "AIzaSyDX0cgZmnb7oE5u-C4UOvk9coIUhZ9Q9bs";
 
   const { isLoaded } = useJsApiLoader({
@@ -39,17 +36,27 @@ const MapPage = () => {
   });
 
   return (
-    <div className="min-h-screen  pb-20 pt-20">
-      <div className="relative h-screen">
+    // --- 2. ADD 'relative' TO THE MAIN WRAPPER ---
+    <div className="min-h-screen pb-20 pt-20 relative">
+      
+      {/* --- 3. ADD THE CANVAS BACKGROUND WITH YOUR COLORS --- */}
+      <CanvasBackground
+        backgroundColor="#f9feffff"
+        elementColors={['#ff620062', '#005cdc5a']}
+      />
+
+      {/* --- 4. ADD 'z-10' TO MAKE THE MAP APPEAR ON TOP --- */}
+      <div className="relative h-screen z-10">
         <div className="absolute top-6 left-6 right-6 z-10">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            {/* --- 5. UPDATED SEARCH BAR COLORS --- */}
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-amber-700" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for crafts, artisans, or locations..."
-              className="w-full pl-12 pr-4 py-4 rounded-xl border border-border bg-card/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300 shadow-elegant"
+              className="w-full pl-12 pr-4 py-4 rounded-xl border border-amber-300 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300 shadow-lg text-amber-900 placeholder-amber-700"
             />
           </div>
         </div>
@@ -89,17 +96,17 @@ const MapPage = () => {
                 position={selectedArtisan.coordinates}
                 onCloseClick={() => setSelectedArtisan(null)}
               >
-                <div className="space-y-1">
-                  <strong>{selectedArtisan.name}</strong>
-                  <div className="text-primary text-sm">{selectedArtisan.specialty}</div>
-                  <div className="text-xs text-muted-foreground">{selectedArtisan.location}</div>
+                {/* --- 6. UPDATED INFO WINDOW COLORS --- */}
+                <div className="space-y-1 p-1">
+                  <strong className="text-amber-900">{selectedArtisan.name}</strong>
+                  <div className="text-amber-600 text-sm">{selectedArtisan.specialty}</div>
+                  <div className="text-xs text-amber-700">{selectedArtisan.location}</div>
                 </div>
               </InfoWindow>
             )}
           </GoogleMap>
         )}
 
-        {/* Details modal retained for non-map info, if needed */}
       </div>
       <Navigation userRole="buyer" />
     </div>
@@ -107,5 +114,3 @@ const MapPage = () => {
 };
 
 export default MapPage;
-
-

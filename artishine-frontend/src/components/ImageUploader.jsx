@@ -53,8 +53,8 @@ const ImageUploader = ({ onImageSelect, previews }) => {
         <div className="space-y-4">
           <Camera className="mx-auto h-12 w-12 text-muted-foreground" />
           <div>
-            <p className="text-lg font-medium">Upload your craft images</p>
-            <p className="text-muted-foreground">Drag and drop or click to select (multiple allowed)</p>
+            <p className="text-lg font-semibold font-medium">Upload your craft images</p>
+            <p className="text-muted-foreground font-semibold">Drag and drop or click to select (multiple allowed)</p>
           </div>
           <PrimaryButton variant="outline" onClick={handleButtonClick}>
             <Camera className="mr-2 h-4 w-4" />

@@ -1,0 +1,47 @@
+/* This is the class for the new wrapper div */
+.login-magic-card {
+  position: relative; /* This is required for the glow effect */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* We no longer need the 'padding: 3px' 
+    because the glow is behind the card, not a border.
+  */
+}
+
+/* This is the new animated glow, translated from your code.
+  It uses the ::after pseudo-element.
+*/
+.login-magic-card::after {
+  content: "";
+  position: absolute;
+  top: 3rem; /* Adapted from '5vw' to look good on the card */
+  left: 0;
+  right: 0;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+  margin: 0 auto;
+  transform: scale(0.85); /* Adapted from '0.75' */
+  
+  /* Adapted from 'blur(5vw)' */
+  -webkit-filter: blur(3rem);
+  filter: blur(3rem);
+  
+  /* These are the colors and animation from your new code */
+  background: linear-gradient();
+  background-size: 300% 200%;
+  animation: animateGlow 5s ease infinite;
+}
+
+@keyframes animateGlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

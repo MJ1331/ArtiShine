@@ -1,0 +1,45 @@
+/* src/components/ProductManagementCard.css */
+
+/* This is the wrapper class that will hold the glow */
+.glowing-product-card {
+  position: relative;
+  display: flex; /* This makes it wrap the inner card */
+  z-index: 1; /* Ensures it's on top of the canvas */
+}
+
+/* This is the glow effect, translated from your SASS code.
+  It's attached to the wrapper's ::after pseudo-element.
+*/
+.glowing-product-card::after {
+  content: "";
+  position: absolute;
+  top: 2rem;   /* Adjusted from 5vw for a more subtle effect */
+  left: 0;
+  right: 0;
+  z-index: -1; /* Sits behind the card */
+  height: 100%;
+  width: 100%;
+  margin: 0 auto;
+  transform: scale(0.87);
+  
+  /* Adjusted from 5vw to a fixed rem value */
+  filter: blur(3rem); 
+  
+  background: linear-gradient(270deg, #0fffc1, #7e0fff);
+  background-size: 200% 200%;
+  
+  /* Animation from your code */
+  animation: animateGlow 10s ease infinite;
+}
+
+@keyframes animateGlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

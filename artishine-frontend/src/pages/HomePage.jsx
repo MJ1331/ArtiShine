@@ -1,45 +1,40 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+
+// --- This path is corrected to '..' ---
+import AnimatedBackground from '../components/AnimatedBackground'; 
 
 const HomePage = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Add gradient background class to body
-    document.body.classList.add('bg-gradient-to-br', 'from-amber-50', 'to-amber-100');
-    
-    return () => {
-      document.body.classList.remove('bg-gradient-to-br', 'from-amber-50', 'to-amber-100');
-    };
-  }, []);
+  // --- Removed the 'useEffect' block ---
 
   return (
     <div className="min-h-screen overflow-hidden relative">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-amber-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-amber-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
+      
+      {/* --- Added the new background component --- */}
+      <AnimatedBackground />
+
+      {/* --- Removed the old decorative blobs --- */}
 
       {/* Navigation */}
       <nav className="relative z-10 container mx-auto px-6 py-6">
         <div className="flex items-center justify-between">
-          <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-700 to-amber-900 cursor-none" data-cursor="pointer">
+          <div className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-800 to-amber-900 cursor-none" data-cursor="pointer">
             Artishine
           </div>
-          <div className="space-x-4">
+          <div className="space-x-5">
             <button 
               onClick={() => window.location.href = '/login'}
-              className="px-6 py-2.5 text-amber-900 hover:text-amber-700 font-medium transition-colors cursor-none border-2 border-amber-800 rounded-lg hover:bg-amber-50/50"
+              className="px-6 py-2.5 text-xl font-bold text-amber-900 hover:text-amber-700 transition-colors cursor-none border-2 border-amber-800 rounded-lg hover:bg-amber-50/50"
               data-cursor="pointer"
             >
               Sign In
             </button>
             <button 
               onClick={() => window.location.href = '/register'}
-              className="px-6 py-2.5 bg-gradient-to-r from-amber-700 to-amber-800 text-white font-medium rounded-lg hover:from-amber-800 hover:to-amber-900 transition-all shadow-lg hover:shadow-amber-200 cursor-none"
+              className="px-6 py-2.5 bg-gradient-to-r text-xl from-amber-700 to-amber-800 text-white font-medium rounded-lg hover:from-amber-800 hover:to-amber-900 transition-all shadow-lg hover:shadow-amber-200 cursor-none"
               data-cursor="pointer"
             >
               Join Now
@@ -52,7 +47,7 @@ const HomePage = () => {
       <main className="relative z-10 container mx-auto px-6 py-16 md:py-24 lg:py-32">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <motion.h1 
-            className="text-4xl md:text-6xl lg:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-800 to-amber-600 leading-tight"
+            className="text-4xl md:text-6xl lg:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-900 to-amber-700 leading-tight"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -61,7 +56,7 @@ const HomePage = () => {
           </motion.h1>
           
           <motion.p 
-            className="text-xl text-amber-900/90 mb-12 max-w-2xl mx-auto leading-relaxed"
+            className="text-xl font-extrabold text-amber-900/90 mb-12 max-w-2xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -100,6 +95,7 @@ const HomePage = () => {
             Why Choose Artishine?
           </h2>
           
+          {/* This 'div' block is now clean */}
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
               {
@@ -145,7 +141,7 @@ const HomePage = () => {
               <a href="#" className="hover:text-amber-300 transition-colors">About</a>
               <a href="#" className="hover:text-amber-300 transition-colors">Contact</a>
               <a href="#" className="hover:text-amber-300 transition-colors">FAQ</a>
-              <a href="#" className="hover:text-amber-300 transition-colors">Terms</a>
+              <a href="#" className="hover:text-amber-3Openingm-colors">Terms</a>
             </div>
           </div>
           <div className="border-t border-amber-800 mt-8 pt-8 text-center md:text-left">

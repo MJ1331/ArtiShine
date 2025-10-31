@@ -1,0 +1,81 @@
+/*
+I have adapted your code to work as a fixed background.
+- Removed the @import "compass/css3"
+- Used "position: fixed" and "z-index: -1" to place it behind your content
+- Renamed classes (e.g., .container to .bg-container) to avoid conflicts
+- Fixed the nested SASS selector for the credit link
+*/
+
+.bg-container {
+  background: #222;
+  height: 100vh; /* Use viewport height */
+  width: 100vw;  /* Use viewport width */
+  margin: 0;
+  overflow: hidden;
+  perspective: 1200px;
+  
+  /* --- This is the important part --- */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1; /* Sits BEHIND all other content */
+}
+
+.bg-container:after {
+  box-shadow: inset 5px 5px 80px rgba(0, 0, 0, 0.8);
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+.bg-wrap {
+  position: absolute;
+  top: -60%;
+  left: -10%;
+  height: 300%;
+  width: 200%;
+  transform: rotateX(20deg) rotateY(40deg) rotateZ(-20deg);
+  z-index: 5;
+}
+
+.bg-pattern {
+  background-size: 500px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 400%;
+  animation: scroll linear 100s infinite; /* <-- This line */
+  background-image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/27530/r7Z09Ht.png');
+}
+
+@keyframes scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-4000px, 0, 0);
+  }
+}
+
+/* Credit link styles */
+.bg-credit {
+  color: #fff;
+  font-family: sans-serif;
+  font-size: 12px;
+  line-height: 12px;
+  position: fixed; /* Fixed to the viewport */
+  text-align: center;
+  bottom: 10px;
+  width: 100%;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  z-index: 1; /* Sits on top of the background, but behind your main content */
+}
+
+.bg-credit a {
+  color: #eee;
+  text-decoration: none;
+}

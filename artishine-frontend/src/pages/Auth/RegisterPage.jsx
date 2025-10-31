@@ -12,11 +12,14 @@ import {
   useLoadScript,
 } from "@react-google-maps/api";
 
+// --- 1. IMPORT THE ANIMATED BACKGROUND ---
+import AnimatedBackground from '../../components/AnimatedBackground';
+
 const MAP_LIBRARIES = ["places"];
 const MAP_CONTAINER_STYLE = { width: "100%", height: "320px", borderRadius: 12 };
 const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 }; // India center as default
 
-/* ---------- MapPicker component ---------- */
+/* ---------- MapPicker component (No Changes) ---------- */
 function MapPicker({ apiKey, initialLocation = null, onLocationChange }) {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: apiKey,
@@ -92,7 +95,7 @@ function MapPicker({ apiKey, initialLocation = null, onLocationChange }) {
   );
 }
 
-/* ---------- helpers ---------- */
+/* ---------- helpers (No Changes) ---------- */
 function formatDateToDDMMYYYY(dateString) {
   if (!dateString) return "";
   const [y, m, d] = dateString.split("-");
@@ -103,7 +106,7 @@ function formatDateToDDMMYYYY(dateString) {
 const RegisterPage = () => {
   const navigate = useNavigate();
 
-  // form state
+  // form state (THIS IS THE FULL, CORRECT LIST)
   const [role, setRole] = useState("artisan");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -124,10 +127,13 @@ const RegisterPage = () => {
   // Vite env vars
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 
+  // --- 2. REMOVE THE 'useEffect' THAT SETS 'bg-amber-50' ---
+  /*
   useEffect(() => {
     document.body.classList.add("bg-amber-50");
     return () => document.body.classList.remove("bg-amber-50");
   }, []);
+  */
 
   const handleLocationChange = (loc) => {
     setLatitude(Number(loc.lat));
@@ -215,19 +221,27 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen overflow-hidden relative">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-amber-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute top-1/2 -right-20 w-96 h-96 bg-amber-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-amber-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
+      
+      {/* --- 3. ADD THE ANIMATED BACKGROUND COMPONENT --- */}
+      <AnimatedBackground />
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+      {/* --- 4. REMOVE THE OLD 'bg-amber-...' BLOB DECORATIONS --- */}
+      {/*
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-amber-200 rounded-full ..."></div>
+        <div className="absolute top-1/2 -right-20 w-96 h-96 bg-amber-300 rounded-full ..."></div>
+        <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-amber-400 rounded-full ..."></div>
+      </div>
+      */}
+
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-14">
         <motion.div
           className="w-full max-w-2xl bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
+          {/* --- ALL CODE BELOW IS UNCHANGED --- */}
           <div className="p-8">
             <div className="text-center mb-6">
               <motion.h1 className="text-4xl font-serif font-bold text-amber-900 mb-1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -306,6 +320,12 @@ const RegisterPage = () => {
                         <option value="en-US">English (en-US)</option>
                         <option value="hi-IN">Hindi (hi-IN)</option>
                         <option value="bn-IN">Bengali (bn-IN)</option>
+                        <option value="ta-IN">Tamil (ta-IN)</option>
+                        <option value="te-IN">Telugu (te-IN)</option>
+                        <option value="ml-IN">Malayalam (ml-IN)</option>
+                        <option value="gu-IN">Gujarati (gu-IN)</option>
+                        <option value="kn-IN">Kannada (kn-IN)</option>
+                        <option value="pa-IN">Punjabi (pa-IN)</option>
                       </select>
                     </div>
                   </div>

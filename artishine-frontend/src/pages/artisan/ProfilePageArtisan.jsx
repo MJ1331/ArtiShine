@@ -3,6 +3,9 @@ import PrimaryButton from '../../components/PrimaryButton';
 import Navigation from '../../components/Navigation';
 import { Instagram, Sparkles, User } from 'lucide-react';
 
+// --- 1. IMPORT THE CANVAS BACKGROUND ---
+import CanvasBackground from '../../components/CanvasBackground';
+
 const ProfilePageArtisan = () => {
   const [profile, setProfile] = useState({
     name: 'Meera Devi',
@@ -27,56 +30,68 @@ const ProfilePageArtisan = () => {
   };
 
   return (
-    <div className="min-h-screen  pb-20 md:pb-6 pt-20">
-      <div className="p-6">
+    // --- 2. ADD 'relative' TO THE MAIN WRAPPER ---
+    <div className="min-h-screen pb-20 md:pb-6 pt-20 relative">
+
+      {/* --- 3. ADD THE CANVAS BACKGROUND WITH YOUR COLORS --- */}
+      <CanvasBackground
+        backgroundColor="#f9feffff" // Using the light color you requested
+        elementColors={['#ff620062', '#005cdc5a']} // Using the element colors you requested
+      />
+
+      {/* --- 4. ADD 'relative z-10' TO YOUR CONTENT WRAPPER --- */}
+      <div className="p-6 relative z-10">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-serif font-bold mb-2 text-white">My Artisan Profile</h1>
-            <p className="text-muted-foreground">Manage your artisan identity and shop details</p>
+            {/* --- 5. TEXT COLORS UPDATED FOR LIGHT BACKGROUND --- */}
+            <h1 className="text-3xl font-serif font-bold mb-2 text-amber-900">My Artisan Profile</h1>
+            <p className="text-amber-700 font-semibold">Manage your artisan identity and shop details</p>
           </div>
 
           <div className="space-y-6">
             <div className="text-center">
-              <div className="w-24 h-24 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
-                <User className="h-12 w-12 text-primary-foreground" />
+              {/* --- 6. AVATAR COLORS UPDATED --- */}
+              <div className="w-24 h-24 bg-amber-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <User className="h-12 w-12 text-white" />
               </div>
               <PrimaryButton variant="outline" size="sm">Upload Photo</PrimaryButton>
             </div>
 
-            <div className="card-warm p-6 space-y-6">
+            {/* --- 7. CARD AND FORM COLORS UPDATED --- */}
+            <div className="bg-white/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Name</label>
+                <label className="block text-sm font-medium mb-2 text-amber-900">Name</label>
                 <input
                   type="text"
                   value={profile.name}
                   onChange={(e) => setProfile((prev) => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-lg border border-border  focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300"
+                  className="w-full px-4 py-3 rounded-lg border border-amber-300 bg-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Shop Name</label>
+                <label className="block text-sm font-medium mb-2 text-amber-900">Shop Name</label>
                 <input
                   type="text"
                   value={profile.shopName}
                   onChange={(e) => setProfile((prev) => ({ ...prev, shopName: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-lg border border-border  focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300"
+                  className="w-full px-4 py-3 rounded-lg border border-amber-300 bg-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Location</label>
+                <label className="block text-sm font-medium mb-2 text-amber-900">Location</label>
                 <input
                   type="text"
                   value={profile.location}
                   onChange={(e) => setProfile((prev) => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-lg border border-border  focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300"
+                  className="w-full px-4 py-3 rounded-lg border border-amber-300 bg-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium">About My Craft</label>
+                  <label className="text-sm font-medium text-amber-900">About My Craft</label>
                   <PrimaryButton
                     onClick={handleGenerateBio}
                     disabled={isGeneratingBio}
@@ -91,19 +106,19 @@ const ProfilePageArtisan = () => {
                   value={profile.bio}
                   onChange={(e) => setProfile((prev) => ({ ...prev, bio: e.target.value }))}
                   rows={6}
-                  className="w-full px-4 py-3 rounded-lg border border-border  focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300 resize-none"
+                  className="w-full px-4 py-3 rounded-lg border border-amber-300 bg-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300 resize-none"
                   placeholder="Tell your story..."
                 />
               </div>
 
-              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+              <div className="flex items-center justify-between p-4 border border-amber-300 rounded-lg bg-white/50">
                 <div className="flex items-center space-x-3">
-                  <Instagram className="h-6 w-6 text-pink-500" />
+                  <Instagram className="h-6 w-6 text-amber-600" />
                   <div>
-                    <p className="font-medium">
+                    <p className="font-medium text-amber-900">
                       {profile.isInstagramConnected ? 'Connected to Instagram' : 'Connect Instagram'}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-amber-700">
                       {profile.isInstagramConnected ? profile.instagramHandle : 'Auto-share your products'}
                     </p>
                   </div>
@@ -129,4 +144,3 @@ const ProfilePageArtisan = () => {
 };
 
 export default ProfilePageArtisan;
-
