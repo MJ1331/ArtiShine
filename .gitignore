@@ -12,4 +12,6 @@ serviceAccountKey.json
 
 # VS Code settings
 .vscode/
+#ig settings
+ig_settings.json
 /venv
