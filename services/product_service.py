@@ -131,7 +131,9 @@ async def create_new_product(user_id: str, images: List[UploadFile], voice_file:
             "artisan_details": {
                 "name": artisan_data.get('name'),
                 "shop_name": artisan_data.get('shop_name'),
-                "location": artisan_data.get('place')
+                "location": artisan_data.get('place'),
+                "latitude": artisan_data.get('latitude'),
+                "longitude": artisan_data.get('longitude')
             },
             "story": story_data,
             "image_urls": image_urls,
@@ -171,6 +173,7 @@ async def get_all_products():
 
         for artisan_doc in artisans_docs:
             user_id = artisan_doc.id
+            artisan_data = artisan_doc.to_dict()
 
             # Check if this user has any products
             products_ref = db.collection("product_stories").document(user_id).collection("products")
@@ -180,6 +183,12 @@ async def get_all_products():
                 product_data = product_doc.to_dict()
                 product_data["user_id"] = user_id
                 product_data["product_id"] = product_doc.id
+                
+                # Ensure artisan_details includes latitude and longitude
+                if "artisan_details" in product_data:
+                    product_data["artisan_details"]["latitude"] = artisan_data.get('latitude')
+                    product_data["artisan_details"]["longitude"] = artisan_data.get('longitude')
+                
                 all_products.append(product_data)
 
         return {
