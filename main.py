@@ -2,6 +2,7 @@
 import uvicorn
 from fastapi import FastAPI
 from routes import user_routes, product_routes
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="ArtiShine API 🚀",
@@ -14,6 +15,20 @@ app = FastAPI(
     2.  Go to `POST /products/create-product` to add a new product for an artisan.
     """,
     version="1.0.0"
+)
+
+origins = [
+    "http://localhost:5173",   # Vite dev server
+    "http://127.0.0.1:5173",
+    # add production origin(s) here, e.g. "https://app.example.com"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,           # or ["*"] for quick dev test (not for prod)
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 # Include the routers
