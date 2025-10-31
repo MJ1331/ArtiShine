@@ -1,23 +1,79 @@
 import os
-import os.path  # <-- ADDED THIS IMPORT
 import requests
 import traceback
 import tempfile
 from dotenv import load_dotenv
 from typing import List, Dict
 from instagrapi import Client
-
+import json 
+# We are no longer using Google Secret Manager for the Instagram session
 from .firebase_config import db
 
-# Load .env variables
+# Load .env variables (this will read your .env file)
 load_dotenv()
 
-# --- ADDED THIS ---
-# Define a path to store the session settings
-IG_SETTINGS_PATH = "ig_settings.json"
+# --- 
+# ✨ NEW SESSION PATH LOGIC
+# For local: Reads "ig_session.json" from .env
+# For GCP: Defaults to "/tmp/ig_session.json" (the only writeable folder)
+# ---
+SESSION_FILE_PATH = os.getenv("SESSION_PATH", "/tmp/ig_session.json")
+
+
+# ---
+# ✨ NEW HELPER FUNCTION TO GET THE CLIENT
+# ---
+def get_instagram_client() -> Client:
+    """
+    This function logs in using credentials from .env
+    and tries to cache the session in a file.
+    """
+    cl = Client()
+    
+    # Get credentials from .env file
+    username = os.getenv("INSTAGRAM_USERNAME")
+    password = os.getenv("INSTAGRAM_PASSWORD")
+    
+    if not username or not password:
+        print("CRITICAL: INSTAGRAM_USERNAME or INSTAGRAM_PASSWORD not found in .env")
+        raise ValueError("Instagram credentials not set")
+    
+    # Try to load the session file if it exists
+    if os.path.exists(SESSION_FILE_PATH):
+        try:
+            print(f"Found session file at {SESSION_FILE_PATH}. Loading...")
+            cl.load_settings(SESSION_FILE_PATH)
+            # Verify the session by making a simple call
+            cl.get_timeline_feed()
+            print("✅ Session is active and valid.")
+            return cl
+        except Exception as e:
+            print(f"Session was invalid ({e}). Deleting and logging in again.")
+            if os.path.exists(SESSION_FILE_PATH):
+                 os.remove(SESSION_FILE_PATH)
+
+    # If session doesn't exist or was invalid, log in fresh
+    print("No valid session found. Logging in with username/password...")
+    try:
+        # This is where you might be asked for a challenge code in your terminal
+        # the *first* time you run it.
+        cl.login(username, password)
+        print("✅ Login successful.")
+        
+        # Save the new session to the file path
+        print(f"Saving new session to {SESSION_FILE_PATH}...")
+        cl.dump_settings(SESSION_FILE_PATH)
+        
+    except Exception as e:
+        print(f"CRITICAL: Login failed: {e}")
+        traceback.print_exc()
+        raise e
+        
+    return cl
 
 # --- Helper: Get Onboarding Post Data ---
 def _get_onboarding_post_data(user_id: str) -> dict | None:
+    # (This function is unchanged)
     if not db:
         print("Firestore client is not available.")
         return None
@@ -35,6 +91,7 @@ def _get_onboarding_post_data(user_id: str) -> dict | None:
 
 # --- Helper: Get Product Post Data ---
 def _get_product_story_data(user_id: str, product_id: str) -> Dict | None:
+    # (This function is unchanged)
     if not db:
         print("Firestore client is not available.")
         return None
@@ -51,7 +108,7 @@ def _get_product_story_data(user_id: str, product_id: str) -> Dict | None:
 
 # --- Helper: Format Product Caption ---
 def _format_story_caption(story_data: Dict) -> str:
-    # (This is your original formatting function)
+    # (This function is unchanged)
     story = story_data.get('story', {})
     artisan = story_data.get('artisan_details', {})
     
@@ -67,7 +124,7 @@ def _format_story_caption(story_data: Dict) -> str:
         "\n----------------------------------------\n",
         f"👨‍🎨 Meet the Artisan: {artisan.get('name', 'A talented local artisan')}",
         f"📍 From: {artisan.get('location', 'A special place')}",
-        f"🛍️ Shop: {artisan.get('shop_name', 'Our Artisan Marketplace')}",
+        f"🛍️ Shop: {story.get('shop_name', 'Our Artisan Marketplace')}",
         "\n#ArtisanMade #SupportLocalArtisans #Handcrafted #Storytelling #Artishine"
     ]
     
@@ -85,20 +142,8 @@ async def post_onboarding(user_id: str):
     temp_dir = tempfile.mkdtemp()
     
     try:
-        cl = Client()
-
-        # --- MODIFICATION: Add session caching ---
-        if os.path.exists(IG_SETTINGS_PATH):
-            print("Found Instagram settings. Loading session...")
-            cl.load_settings(IG_SETTINGS_PATH)
-            # Login again to verify session
-            cl.login(os.getenv('INSTAGRAM_USERNAME'), os.getenv('INSTAGRAM_PASSWORD'))
-        else:
-            print("No Instagram settings found. Logging in for the first time...")
-            cl.login(os.getenv('INSTAGRAM_USERNAME'), os.getenv('INSTAGRAM_PASSWORD'))
-            print("Saving Instagram session settings...")
-            cl.dump_settings(IG_SETTINGS_PATH)
-        # --- END OF MODIFICATION ---
+        # --- ✨ MODIFIED: Using the new login function ---
+        cl = get_instagram_client()
 
         img_url = post_data.get('onboardingImageUrl')
         if not img_url:
@@ -110,21 +155,17 @@ async def post_onboarding(user_id: str):
             image_path = os.path.join(temp_dir, f"{user_id}.jpg")
             with open(image_path, 'wb') as f: f.write(response.content)
             
-            # This logic now correctly formats the hashtag list
+            # (Rest of this function is unchanged)
             caption_data = post_data.get('onboardingCaption', {})
             caption_text = caption_data.get('caption', '')
-            hashtags_data = caption_data.get('hashtags')  # Get the raw hashtag data
-
-            hashtag_string = "" # Default to an empty string
+            hashtags_data = caption_data.get('hashtags') 
+            hashtag_string = "" 
 
             if isinstance(hashtags_data, list):
-                # AI gave a list: add '#' to each item and join them with a space
                 hashtag_string = " ".join([f"#{tag.lstrip('#')}" for tag in hashtags_data])
             elif isinstance(hashtags_data, str):
-                # AI gave a single string: use it as is
                 hashtag_string = hashtags_data
 
-            # This creates a clean caption
             full_caption = f"{caption_text}\n\n{hashtag_string}"
             
             cl.photo_upload(path=image_path, caption=full_caption)
@@ -158,7 +199,7 @@ async def post_product(user_id: str, product_id: str):
     image_paths = []
 
     try:
-        # Download all images from GCS
+        # (Image download logic is unchanged)
         for i, url in enumerate(image_urls):
             response = requests.get(url)
             if response.status_code == 200:
@@ -171,21 +212,8 @@ async def post_product(user_id: str, product_id: str):
             print("Failed to download any images.")
             return
 
-        # Login and post
-        cl = Client()
-
-        # --- MODIFICATION: Add session caching ---
-        if os.path.exists(IG_SETTINGS_PATH):
-            print("Found Instagram settings. Loading session...")
-            cl.load_settings(IG_SETTINGS_PATH)
-            # Login again to verify session
-            cl.login(os.getenv('INSTAGRAM_USERNAME'), os.getenv('INSTAGRAM_PASSWORD'))
-        else:
-            print("No Instagram settings found. Logging in for the first time...")
-            cl.login(os.getenv('INSTAGRAM_USERNAME'), os.getenv('INSTAGRAM_PASSWORD'))
-            print("Saving Instagram session settings...")
-            cl.dump_settings(IG_SETTINGS_PATH)
-        # --- END OF MODIFICATION ---
+        # --- ✨ MODIFIED: Using the new login function ---
+        cl = get_instagram_client()
         
         if len(image_paths) == 1:
             cl.photo_upload(path=image_paths[0], caption=caption)
@@ -197,7 +225,7 @@ async def post_product(user_id: str, product_id: str):
     except Exception:
         traceback.print_exc()
     finally:
-        # Clean up
+        # (Cleanup logic is unchanged)
         for path in image_paths:
             if os.path.exists(path):
                 os.remove(path)
