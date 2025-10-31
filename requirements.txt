@@ -11,3 +11,7 @@ Pillow
 python-dotenv
 requests
 google-generativeai
+python-multipart
+bcrypt
+PyJWT
+pydantic[email]

@@ -1,7 +1,7 @@
 import uuid
 from typing import List
 from fastapi import UploadFile, HTTPException
-import datetime  
+import datetime
 
 # Import our centralized configs and services
 from .firebase_config import db, bucket
@@ -131,7 +131,9 @@ async def create_new_product(user_id: str, images: List[UploadFile], voice_file:
             "artisan_details": {
                 "name": artisan_data.get('name'),
                 "shop_name": artisan_data.get('shop_name'),
-                "location": artisan_data.get('place')
+                "location": artisan_data.get('place'),
+                "latitude": artisan_data.get('latitude'),
+                "longitude": artisan_data.get('longitude')
             },
             "story": story_data,
             "image_urls": image_urls,
@@ -153,3 +155,72 @@ async def create_new_product(user_id: str, images: List[UploadFile], voice_file:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Product creation workflow failed: {str(e)}")
+
+async def get_all_products():
+    """
+    Retrieves all products from all artisans in Firestore.
+    Returns a list of all products with their details and associated user_id.
+    """
+    if not db:
+        raise HTTPException(status_code=500, detail="Firebase is not initialized.")
+
+    try:
+        all_products = []
+
+        # Get all artisans to know which user_ids to check for products
+        artisans_ref = db.collection("artisans")
+        artisans_docs = artisans_ref.stream()
+
+        for artisan_doc in artisans_docs:
+            user_id = artisan_doc.id
+            artisan_data = artisan_doc.to_dict()
+
+            # Check if this user has any products
+            products_ref = db.collection("product_stories").document(user_id).collection("products")
+            products_docs = products_ref.stream()
+
+            for product_doc in products_docs:
+                product_data = product_doc.to_dict()
+                product_data["user_id"] = user_id
+                product_data["product_id"] = product_doc.id
+                
+                # Ensure artisan_details includes latitude and longitude
+                if "artisan_details" in product_data:
+                    product_data["artisan_details"]["latitude"] = artisan_data.get('latitude')
+                    product_data["artisan_details"]["longitude"] = artisan_data.get('longitude')
+                
+                all_products.append(product_data)
+
+        return {
+            "total_products": len(all_products),
+            "products": all_products
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve products: {str(e)}")
+
+async def get_products_by_user_id(user_id: str):
+    """
+    Retrieves all products for a specific user_id from Firestore.
+    Returns a list of products with their details.
+    """
+    if not db:
+        raise HTTPException(status_code=500, detail="Firebase is not initialized.")
+
+    try:
+        products_ref = db.collection("product_stories").document(user_id).collection("products")
+        products_docs = products_ref.stream()
+
+        products = []
+        for product_doc in products_docs:
+            product_data = product_doc.to_dict()
+            product_data["user_id"] = user_id
+            product_data["product_id"] = product_doc.id
+            products.append(product_data)
+
+        return {
+            "user_id": user_id,
+            "total_products": len(products),
+            "products": products
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve products for user {user_id}: {str(e)}")
