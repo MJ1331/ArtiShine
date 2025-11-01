@@ -1,5 +1,5 @@
 # routes/product_routes.py
-from fastapi import APIRouter, Form, File, UploadFile, HTTPException, Depends
+from fastapi import APIRouter, Form, File, UploadFile, HTTPException, Depends, Body
 from typing import List
 from services import product_service, user_service
 
@@ -46,6 +46,7 @@ async def get_my_products_endpoint(current_user: dict = Depends(user_service.get
     Returns all products for the authenticated user with their details.
     """
     user_id = current_user["user_id"]
+
 @router.get("/{user_id}/products",
     summary="Get All Products by User ID",
     description="Retrieves all products for a specific artisan using their user ID."
@@ -65,4 +66,17 @@ async def get_product_details_endpoint(product_id: str):
     Returns detailed information for the specified product_id.
     """
     return await product_service.get_product_details_by_id(product_id)
-    return await product_service.get_products_by_user_id(user_id)
+
+@router.delete("/{user_id}/products/{product_id}",
+    summary="Delete a Product by Product ID",
+    description="Deletes a specific product for an artisan using their user ID and the product ID."
+)
+async def delete_product_route(user_id: str, product_id: str):
+    return await product_service.delete_product(user_id, product_id)
+
+@router.patch("/{user_id}/products/{product_id}",
+    summary="Partially Update a Product by Product ID",
+    description="Partially updates a specific product for an artisan using their user ID and the product ID."
+)
+async def patch_product_route(user_id: str, product_id: str, payload: dict = Body(...)):
+    return await product_service.update_product_partially(user_id, product_id, payload)
