@@ -22,6 +22,8 @@ origins = [
     "http://127.0.0.1:5173",
     # add production origin(s) here, e.g. "https://app.example.com"
     "https://artisan-ai-backend.web.app"
+    "https://artishine.in",                 # if frontend will use root later
+    "https://api.artishine.in",             # allow api origin if needed
 ]
 
 app.add_middleware(
