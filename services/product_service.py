@@ -253,15 +253,28 @@ async def get_all_artisans_with_images():
                 if "image_urls" in product_data:
                     product_images.extend(product_data["image_urls"])
 
+            # Get onboarding post data
+            onboarding_post = None
+            if db:
+                try:
+                    onboarding_doc = db.collection('Onboarding_Posts').document(user_id).get()
+                    if onboarding_doc.exists:
+                        onboarding_post = onboarding_doc.to_dict()
+                except Exception as e:
+                    print(f"Error getting onboarding post for {user_id}: {str(e)}")
+
             # Create artisan object with details and images
             artisan_info = {
                 "user_id": user_id,
                 "name": artisan_data.get('name'),
+                "email": artisan_data.get('email'),
+                "phone_number": artisan_data.get('phone_number'),
                 "shop_name": artisan_data.get('shop_name'),
                 "place": artisan_data.get('place'),
                 "latitude": artisan_data.get('latitude'),
                 "longitude": artisan_data.get('longitude'),
-                "product_images": product_images
+                "product_images": product_images,
+                "onboarding_post": onboarding_post
             }
 
             artisans_with_images.append(artisan_info)
