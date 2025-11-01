@@ -1,7 +1,7 @@
 # main.py
 import uvicorn
 from fastapi import FastAPI
-from routes import user_routes, product_routes
+from routes import user_routes, product_routes, map_explore_routes
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -33,14 +33,19 @@ app.add_middleware(
 
 # Include the routers
 app.include_router(
-    user_routes.router, 
-    prefix="/users", 
+    user_routes.router,
+    prefix="/users",
     tags=["1. User Routes"]
 )
 app.include_router(
-    product_routes.router, 
-    prefix="/products", 
+    product_routes.router,
+    prefix="/products",
     tags=["2. Product Routes"]
+)
+app.include_router(
+    map_explore_routes.router,
+    prefix="/map",
+    tags=["3. Map & Explore Routes"]
 )
 
 @app.get("/", tags=["Root"])

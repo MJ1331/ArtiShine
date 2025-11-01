@@ -46,4 +46,23 @@ async def get_my_products_endpoint(current_user: dict = Depends(user_service.get
     Returns all products for the authenticated user with their details.
     """
     user_id = current_user["user_id"]
+@router.get("/{user_id}/products",
+    summary="Get All Products by User ID",
+    description="Retrieves all products for a specific artisan using their user ID."
+)
+async def get_products_by_user_id_endpoint(user_id: str):
+    """
+    Returns all products for the specified user_id with their details.
+    """
+    return await product_service.get_products_by_user_id(user_id)
+
+@router.get("/{product_id}",
+    summary="Get Product Details by Product ID",
+    description="Retrieves detailed information for a specific product by its product ID."
+)
+async def get_product_details_endpoint(product_id: str):
+    """
+    Returns detailed information for the specified product_id.
+    """
+    return await product_service.get_product_details_by_id(product_id)
     return await product_service.get_products_by_user_id(user_id)
