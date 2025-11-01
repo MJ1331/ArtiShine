@@ -20,10 +20,9 @@ app = FastAPI(
 origins = [
     "http://localhost:5173",   # Vite dev server
     "http://127.0.0.1:5173",
-    # add production origin(s) here, e.g. "https://app.example.com"
-    "https://artisan-ai-backend.web.app"
-    "https://artishine.in",                 # if frontend will use root later
-    "https://api.artishine.in",             # allow api origin if needed
+    "https://artisan-ai-backend.web.app",
+    "https://artishine.in",     # frontend domain
+    "https://api.artishine.in", # backend domain
 ]
 
 app.add_middleware(
