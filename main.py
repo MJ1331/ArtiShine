@@ -21,6 +21,7 @@ origins = [
     "http://localhost:5173",   # Vite dev server
     "http://127.0.0.1:5173",
     # add production origin(s) here, e.g. "https://app.example.com"
+    "https://artisan-ai-backend.web.app"
 ]
 
 app.add_middleware(
