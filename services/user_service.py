@@ -28,6 +28,17 @@ async def register_artisan(details: ArtisanDetails):
         raise HTTPException(status_code=500, detail="Firebase is not initialized.")
 
     try:
+        # Check if email already exists in artisans collection
+        from google.cloud.firestore import FieldFilter
+        existing_artisan = db.collection("artisans").where(filter=FieldFilter("email", "==", details.email)).limit(1).stream()
+        if any(existing_artisan):
+            raise HTTPException(status_code=409, detail="Email already registered as artisan.")
+        
+        # Check if email exists in buyers collection
+        existing_buyer = db.collection("buyers").where(filter=FieldFilter("email", "==", details.email)).limit(1).stream()
+        if any(existing_buyer):
+            raise HTTPException(status_code=409, detail="Email already registered as buyer.")
+
         # Generate a new unique UserID
         user_id = str(uuid.uuid4())
 
@@ -200,6 +211,17 @@ async def register_buyer(details: BuyerDetails):
         raise HTTPException(status_code=500, detail="Firebase is not initialized.")
 
     try:
+        # Check if email already exists in buyers collection
+        from google.cloud.firestore import FieldFilter
+        existing_buyer = db.collection("buyers").where(filter=FieldFilter("email", "==", details.email)).limit(1).stream()
+        if any(existing_buyer):
+            raise HTTPException(status_code=409, detail="Email already registered as buyer.")
+        
+        # Check if email exists in artisans collection
+        existing_artisan = db.collection("artisans").where(filter=FieldFilter("email", "==", details.email)).limit(1).stream()
+        if any(existing_artisan):
+            raise HTTPException(status_code=409, detail="Email already registered as artisan.")
+
         # Generate a new unique UserID
         user_id = str(uuid.uuid4())
 
