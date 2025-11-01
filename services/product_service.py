@@ -307,6 +307,8 @@ async def get_all_artisans_with_images():
             artisan_info = {
                 "user_id": user_id,
                 "name": artisan_data.get('name'),
+                "email": artisan_data.get('email'),
+                "phone_number": artisan_data.get('phone_number'),
                 "shop_name": artisan_data.get('shop_name'),
                 "place": artisan_data.get('place'),
                 "latitude": artisan_data.get('latitude'),

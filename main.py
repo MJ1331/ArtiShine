@@ -1,7 +1,7 @@
 # main.py
 import uvicorn
 from fastapi import FastAPI
-from routes import user_routes, product_routes, map_explore_routes
+from routes import user_routes, product_routes, map_explore_routes, wishlist_routes
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -12,7 +12,7 @@ app = FastAPI(
     
     **Test the workflows:**
     1.  Go to `POST /users/register` to create a new artisan.
-    2.  Go to `POST /products/create-product` to add a new product for an artisan.
+    2.  Go to `POST /products/create-product` to add a ¬new product for an artisan.
     """,
     version="1.0.0"
 )
@@ -46,6 +46,11 @@ app.include_router(
     map_explore_routes.router,
     prefix="/map",
     tags=["3. Map & Explore Routes"]
+)
+app.include_router(
+    wishlist_routes.router,
+    prefix="/wishlists",
+    tags=["4. Wishlist Routes"]
 )
 
 @app.get("/", tags=["Root"])
