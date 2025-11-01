@@ -2,7 +2,6 @@
 import uuid
 import bcrypt
 import jwt
-import datetime
 from fastapi import HTTPException, Depends, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from .firebase_config import db
@@ -14,7 +13,7 @@ import os
 # NEW imports for uploads / timestamps
 from fastapi import UploadFile
 from firebase_admin import storage
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 load_dotenv()
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-change-this-in-production")
@@ -146,7 +145,8 @@ async def login_user(login_data: LoginRequest):
 
         # Find user by email in the appropriate collection
         users_ref = db.collection(collection_name)
-        query = users_ref.where("email", "==", login_data.email).limit(1)
+        from google.cloud.firestore import FieldFilter
+        query = users_ref.where(filter=FieldFilter("email", "==", login_data.email)).limit(1)
         docs = query.stream()
 
         user_doc = None
@@ -174,7 +174,7 @@ async def login_user(login_data: LoginRequest):
             "user_id": user_id,
             "email": login_data.email,
             "role": login_data.role.value,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)  # Token expires in 24 hours
+            "exp": datetime.now(timezone.utc) + timedelta(hours=24)  # Token expires in 24 hours
         }
 
         token = jwt.encode(payload, JWT_SECRET_KEY, algorithm="HS256")

@@ -2,6 +2,7 @@ import uuid
 from typing import List
 from fastapi import HTTPException
 from datetime import datetime
+from google.cloud.firestore import FieldFilter
 
 # Import our centralized configs and services
 from .firebase_config import db
@@ -18,7 +19,7 @@ async def add_to_wishlist(user_id: str, product_id: str) -> dict:
 
     try:
         # Check if this user already has this product in their wishlist
-        existing_wishlists = db.collection("wishlists").where("user_id", "==", user_id).where("product_id", "==", product_id).limit(1).stream()
+        existing_wishlists = db.collection("wishlists").where(filter=FieldFilter("user_id", "==", user_id)).where(filter=FieldFilter("product_id", "==", product_id)).limit(1).stream()
 
         # If it exists, return the existing entry
         for doc in existing_wishlists:
@@ -59,7 +60,7 @@ async def get_user_wishlist(user_id: str) -> dict:
 
     try:
         # Query wishlists collection for items by this user
-        wishlists_ref = db.collection("wishlists").where("user_id", "==", user_id)
+        wishlists_ref = db.collection("wishlists").where(filter=FieldFilter("user_id", "==", user_id))
         wishlists_docs = wishlists_ref.stream()
 
         wishlist_items = []
@@ -87,7 +88,7 @@ async def get_product_wishlist(product_id: str) -> dict:
 
     try:
         # Query wishlists collection for items with this product_id
-        wishlists_ref = db.collection("wishlists").where("product_id", "==", product_id)
+        wishlists_ref = db.collection("wishlists").where(filter=FieldFilter("product_id", "==", product_id))
         wishlists_docs = wishlists_ref.stream()
 
         wishlist_entries = []

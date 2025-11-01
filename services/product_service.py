@@ -382,7 +382,51 @@ async def delete_product(user_id: str, product_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to delete product: {str(e)}")
 
 # --------------------------
-# 6. update_product_partially (NEW)
+# 6. get_product_details_by_id (NEW - was missing from the file somehow? Wait, it should be here but let me check the end of the file)
+# --------------------------
+async def get_product_details_by_id(product_id: str):
+    """
+    Retrieves detailed information for a specific product by its product_id.
+    Searches across all artisans to find the product.
+    """
+    if not db:
+        raise HTTPException(status_code=500, detail="Firebase is not initialized.")
+
+    try:
+        # Get all artisans to search for the product
+        artisans_ref = db.collection("artisans")
+        artisans_docs = artisans_ref.stream()
+
+        for artisan_doc in artisans_docs:
+            user_id = artisan_doc.id
+            artisan_data = artisan_doc.to_dict()
+
+            # Check if this artisan has the product
+            product_ref = db.collection("product_stories").document(user_id).collection("products").document(product_id)
+            product_doc = product_ref.get()
+
+            if product_doc.exists:
+                product_data = product_doc.to_dict()
+                product_data["user_id"] = user_id
+                product_data["product_id"] = product_id
+
+                # Ensure artisan_details includes latitude and longitude
+                if "artisan_details" in product_data:
+                    product_data["artisan_details"]["latitude"] = artisan_data.get('latitude')
+                    product_data["artisan_details"]["longitude"] = artisan_data.get('longitude')
+
+                return product_data
+
+        # If product not found
+        raise HTTPException(status_code=404, detail=f"Product with id {product_id} not found.")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve product details: {str(e)}")
+
+# --------------------------
+# 7. update_product_partially (NEW)
 # --------------------------
 async def update_product_partially(user_id: str, product_id: str, patch_data: Dict):
     """
