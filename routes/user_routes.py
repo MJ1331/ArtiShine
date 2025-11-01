@@ -1,7 +1,8 @@
 # routes/user_routes.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Form, Body, HTTPException, UploadFile, File
 from services import user_service
 from models.user_models import ArtisanDetails, BuyerDetails, LoginRequest # Import the models
+from typing import Dict, Any
 
 router = APIRouter()
 
@@ -107,4 +108,42 @@ async def get_my_buyer_profile_endpoint(current_user: dict = Depends(user_servic
         raise HTTPException(status_code=403, detail="Access denied. Buyer role required.")
 
     user_id = current_user["user_id"]
-    return await user_service.get_buyer_by_id(user_id)
+
+@router.patch(
+    "/me",
+    summary="Update artisan profile (unprotected)",
+    description="Unprotected: include user_id in JSON body along with fields to update (name, shopName, location, bio, phone, typeOfWork)."
+)
+async def patch_users_me(payload: Dict[str, Any] = Body(...)):
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Invalid JSON body; expected an object.")
+
+    user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="user_id is required in request body.")
+
+    # Build updates dict (only include recognized frontend keys)
+    allowed_keys = {"name", "shopName", "location", "bio", "phone", "typeOfWork"}
+    updates = {k: v for k, v in payload.items() if k in allowed_keys}
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No valid fields to update. Allowed: name, shopName, location, bio, phone, typeOfWork")
+
+    return await user_service.update_artisan_profile_unprotected(user_id=user_id, updates=updates)
+
+
+# --------------------------------------------------------------
+# UNPROTECTED: POST /users/me/photo
+# Accepts form-data user_id (string) and file (image)
+# --------------------------------------------------------------
+@router.post(
+    "/me/photo",
+    summary="Upload profile photo (unprotected)",
+    description="Unprotected: form-data with user_id and file (image)."
+)
+async def post_users_me_photo(user_id: str = Form(...), file: UploadFile = File(...)):
+    if not user_id:
+        raise HTTPException(status_code=400, detail="user_id form field is required.")
+    if not file:
+        raise HTTPException(status_code=400, detail="file is required.")
+    return await user_service.upload_profile_photo_unprotected(user_id=user_id, file=file)

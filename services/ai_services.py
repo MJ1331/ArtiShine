@@ -5,9 +5,11 @@ import requests
 import mimetypes
 import time  # <-- Make sure this import is at the top
 from dotenv import load_dotenv
+from typing import Dict, Any
 
 # --- NEW: Use the 'google-generativeai' library for API key access ---
 import google.generativeai as genai
+from .firebase_config import db
 
 # Load environment variables from .env file
 load_dotenv()
@@ -276,3 +278,62 @@ def translate_text_gcp(text: str, target_language: str = "en") -> str:
                 error_body = e.response.text
         print(f"Response body: {error_body}")
         return ""
+    
+def generate_bio(user_id: str) -> Dict[str, Any]:
+    """
+    Generate a short, engaging bio for an artisan using Gemini 2.5 Flash.
+    Fetches artisan data from Firestore and saves the bio back.
+    """
+    global text_model
+    if not text_model:
+        return {"error": "Gemini text model not initialized."}
+
+    if not db:
+        return {"error": "Firestore not initialized."}
+
+    print(f"Generating bio for artisan {user_id}...")
+
+    try:
+        artisan_ref = db.collection("artisans").document(user_id)
+        doc = artisan_ref.get()
+
+        if not doc.exists:
+            return {"error": "Artisan not found."}
+
+        data = doc.to_dict()
+        name = data.get("name", "Artisan")
+        shop_name = data.get("shop_name", "your craft shop")
+        place = data.get("place", "your city")
+        craft = data.get("shop_type", "traditional craft")  # e.g., Pottery
+
+        prompt = (
+            f"Write a warm, inspiring 2-3 sentence bio for {name}, "
+            f"a passionate artisan who runs '{shop_name}' in {place}. "
+            f"They specialize in {craft}. "
+            f"Highlight their dedication, heritage, and unique touch. "
+            f"Keep it under 120 words and make it heartfelt."
+        )
+
+        # Generate with Gemini
+        response = text_model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.8,
+                max_output_tokens=150
+            )
+        )
+
+        if not response.parts:
+            return {"error": "Empty response from Gemini."}
+
+        bio = response.text.strip()
+
+        # Save bio back to Firestore
+        artisan_ref.update({"bio": bio})
+
+        print(f"Bio generated and saved for {user_id}")
+        return {"generated_bio": bio, "artisan_id": user_id}
+
+    except Exception as e:
+        print(f"Bio generation failed: {e}")
+        return {"error": str(e)}

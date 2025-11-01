@@ -3,13 +3,18 @@ import uuid
 import bcrypt
 import jwt
 import datetime
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from .firebase_config import db
 from . import onboarding_service
 from models.user_models import ArtisanDetails, BuyerDetails, LoginRequest, UserRole
 from dotenv import load_dotenv
 import os
+
+# NEW imports for uploads / timestamps
+from fastapi import UploadFile
+from firebase_admin import storage
+from datetime import datetime, timezone
 
 load_dotenv()
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-change-this-in-production")
@@ -322,3 +327,114 @@ async def get_user_with_products(user_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve user with products: {str(e)}")
+
+# --------------------------------------------------------------
+#  UNPROTECTED: Update artisan profile by user_id
+# --------------------------------------------------------------
+async def update_artisan_profile_unprotected(
+    user_id: str,
+    updates: dict
+):
+    """
+    Unprotected: Update artisan profile by user_id.
+    `updates` should be a dict with frontend keys: name, shopName, location, bio, phone, typeOfWork
+    """
+    if not db:
+        raise HTTPException(status_code=500, detail="Firestore not initialized.")
+
+    artisan_ref = db.collection("artisans").document(user_id)
+    doc = artisan_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Artisan not found")
+
+    # Map frontend keys to Firestore keys
+    field_map = {
+        "name": "name",
+        "shopName": "shop_name",
+        "location": "place",
+        "bio": "bio",
+        "phone": "phone",
+        "typeOfWork": "type_of_work"
+    }
+
+    filtered = {}
+    for frontend_key, value in updates.items():
+        # Accept False/0 but skip None or empty strings
+        if value is None:
+            continue
+        if isinstance(value, str) and value.strip() == "":
+            continue
+
+        firestore_key = field_map.get(frontend_key)
+        if firestore_key:
+            filtered[firestore_key] = value
+        else:
+            print(f"Warning: Ignoring unknown field '{frontend_key}'")
+
+    if not filtered:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    # Optional audit metadata
+    filtered["profile_last_updated_at"] = datetime.now(timezone.utc).isoformat()
+    filtered["profile_last_updated_by"] = user_id
+
+    try:
+        artisan_ref.update(filtered)
+        print(f"Updated artisan {user_id}: {filtered}")
+        updated_doc = artisan_ref.get()
+        updated_data = updated_doc.to_dict() or {}
+        updated_data["user_id"] = updated_doc.id
+        return {"message": "Profile updated", "updated_fields": list(filtered.keys()), "user": updated_data}
+    except Exception as e:
+        print(f"Firestore update failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Update failed: {str(e)}")
+
+# --------------------------------------------------------------
+#  UNPROTECTED: Upload profile photo by user_id
+# --------------------------------------------------------------
+async def upload_profile_photo_unprotected(
+    user_id: str,
+    file: UploadFile = File(...)
+):
+    """
+    Unprotected: Upload profile photo for the given user_id.
+    """
+    if not db:
+        raise HTTPException(status_code=500, detail="Firestore is not initialized.")
+
+    # Validate file
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image (JPEG/PNG)")
+
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:  # 5 MB
+        raise HTTPException(status_code=400, detail="Image too large (max 5 MB)")
+
+    artisan_ref = db.collection("artisans").document(user_id)
+    doc = artisan_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Artisan not found.")
+
+    try:
+        bucket = storage.bucket()
+        blob_path = f"profiles/artisans/{user_id}/photo_{int(datetime.now().timestamp())}.jpg"
+        blob = bucket.blob(blob_path)
+
+        blob.upload_from_string(contents, content_type=file.content_type)
+        # Try to make public; if bucket prevents it, return gs:// path
+        try:
+            blob.make_public()
+            photo_url = blob.public_url
+        except Exception:
+            photo_url = f"gs://{bucket.name}/{blob_path}"
+
+        artisan_ref.update({
+            "photo_url": photo_url,
+            "photo_updated_at": datetime.now(timezone.utc).isoformat()
+        })
+
+        print(f"Uploaded photo for {user_id}: {photo_url}")
+        return {"message": "Photo uploaded", "photo_url": photo_url}
+    except Exception as e:
+        print(f"Upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")

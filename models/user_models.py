@@ -1,6 +1,7 @@
 # models/user_models.py
 from pydantic import BaseModel, Field, EmailStr
 from enum import Enum
+from typing import Optional
 
 class UserRole(str, Enum):
     ARTISAN = "artisan"
@@ -39,3 +40,12 @@ class LoginRequest(BaseModel):
     email: EmailStr = Field(..., description="User's email address")
     password: str = Field(..., description="User's password")
     role: UserRole = Field(..., description="User role (artisan or buyer)")
+
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = Field(None, description="Updated name")
+    shop_name: Optional[str] = Field(None, alias="shopName", description="Updated shop name")
+    place: Optional[str] = Field(None, alias="location", description="Updated location")
+    bio: Optional[str] = Field(None, description="Updated bio")
+
+    class Config:
+        populate_by_name = True  # Allows using `shopName` in JSON, maps to `shop_name`
