@@ -25,6 +25,7 @@ async def create_product_endpoint(
         raise HTTPException(status_code=400, detail="You must upload between 1 and 4 images.")
 
     user_id = current_user["user_id"]
+    # This call now correctly maps to the service, which will NOT post to Instagram
     return await product_service.create_new_product(user_id, images, voice_file)
 
 @router.get("/",
@@ -46,6 +47,9 @@ async def get_my_products_endpoint(current_user: dict = Depends(user_service.get
     Returns all products for the authenticated user with their details.
     """
     user_id = current_user["user_id"]
+    # --- FIX ---
+    # Added the missing return statement
+    return await product_service.get_products_by_user_id(user_id)
 
 @router.get("/{user_id}/products",
     summary="Get All Products by User ID",
@@ -80,3 +84,20 @@ async def delete_product_route(user_id: str, product_id: str):
 )
 async def patch_product_route(user_id: str, product_id: str, payload: dict = Body(...)):
     return await product_service.update_product_partially(user_id, product_id, payload)
+
+# --- ADDED ---
+# This is the new endpoint for the two-step publish flow
+@router.post("/{user_id}/{product_id}/post-to-instagram",
+    summary="Post an Existing Product to Instagram",
+    description="Triggers an Instagram post for a product that is already created (after user review)."
+)
+async def post_to_instagram_endpoint(
+    user_id: str, 
+    product_id: str,
+    current_user: dict = Depends(user_service.get_current_user)
+):
+    # Security check: Ensure the logged-in user owns this product
+    if current_user["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to post for this user.")
+        
+    return await product_service.post_product_to_instagram(user_id, product_id)
