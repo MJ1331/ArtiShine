@@ -14,6 +14,39 @@ import os
 from fastapi import UploadFile
 from firebase_admin import storage
 from datetime import datetime, timezone, timedelta
+from typing import Optional
+from urllib.parse import unquote
+
+# -------------------------- Helper function for blob name parsing --------------------------
+def _get_blob_name_from_url(url: str) -> Optional[str]:
+    """
+    Extracts the correct blob name from a GCS public URL.
+    Handles URL encoding (e.g., %20, %2520 → space).
+    """
+    if not url or not bucket:
+        return None
+
+    bucket_name = bucket.name
+    public_prefix = f"https://storage.googleapis.com/{bucket_name}/"
+    if url.startswith(public_prefix):
+        encoded_path = url[len(public_prefix):]
+        return unquote(encoded_path)
+
+    # Fallback for gs:// URLs
+    gs_prefix = f"gs://{bucket_name}/"
+    if url.startswith(gs_prefix):
+        encoded_path = url[len(gs_prefix):]
+        return unquote(encoded_path)
+
+    # Last-ditch fallback
+    try:
+        parts = url.split(f"/{bucket_name}/", 1)
+        if len(parts) > 1:
+            return unquote(parts[1])
+    except:
+        pass
+
+    return None
 
 load_dotenv()
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-change-this-in-production")
@@ -437,10 +470,25 @@ async def upload_profile_photo_unprotected(
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Artisan not found.")
 
+    artisan_data = doc.to_dict()
+    old_photo_url = artisan_data.get("photo_url")
+
     try:
         bucket = storage.bucket()
         blob_path = f"profiles/artisans/{user_id}/photo_{int(datetime.now().timestamp())}.jpg"
         blob = bucket.blob(blob_path)
+
+        # Delete old photo from storage if it exists
+        if old_photo_url:
+            try:
+                old_blob_name = _get_blob_name_from_url(old_photo_url)
+                if old_blob_name:
+                    old_blob = bucket.blob(old_blob_name)
+                    if old_blob.exists():
+                        old_blob.delete()
+                        print(f"Deleted old photo: {old_blob_name}")
+            except Exception as e:
+                print(f"Warning: Could not delete old photo: {e}")
 
         blob.upload_from_string(contents, content_type=file.content_type)
         # Try to make public; if bucket prevents it, return gs:// path
