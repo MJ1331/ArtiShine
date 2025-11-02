@@ -35,6 +35,7 @@ class BuyerDetails(BaseModel):
     place: str = Field(..., description="Location, e.g., 'Jaipur, India'")
     latitude: float = Field(..., description="Latitude coordinate of the location")
     longitude: float = Field(..., description="Longitude coordinate of the location")
+    phone_number: str = Field(..., description="Buyer's phone number")
 
 class LoginRequest(BaseModel):
     email: EmailStr = Field(..., description="User's email address")
