@@ -224,10 +224,12 @@ async def get_all_products():
                 product_data["user_id"] = user_id
                 product_data["product_id"] = product_doc.id
 
-                # Ensure artisan_details includes latitude and longitude
+                # Ensure artisan_details includes complete contact information
                 if "artisan_details" in product_data:
                     product_data["artisan_details"]["latitude"] = artisan_data.get('latitude')
                     product_data["artisan_details"]["longitude"] = artisan_data.get('longitude')
+                    product_data["artisan_details"]["email"] = artisan_data.get('email')
+                    product_data["artisan_details"]["phone_number"] = artisan_data.get('phone_number')
 
                 all_products.append(product_data)
 
@@ -414,10 +416,12 @@ async def get_product_details_by_id(product_id: str):
                 product_data["user_id"] = user_id
                 product_data["product_id"] = product_id
 
-                # Ensure artisan_details includes latitude and longitude
+                # Ensure artisan_details includes complete contact information
                 if "artisan_details" in product_data:
                     product_data["artisan_details"]["latitude"] = artisan_data.get('latitude')
                     product_data["artisan_details"]["longitude"] = artisan_data.get('longitude')
+                    product_data["artisan_details"]["email"] = artisan_data.get('email')
+                    product_data["artisan_details"]["phone_number"] = artisan_data.get('phone_number')
 
                 return product_data
 
