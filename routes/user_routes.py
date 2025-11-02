@@ -147,3 +147,41 @@ async def post_users_me_photo(user_id: str = Form(...), file: UploadFile = File(
     if not file:
         raise HTTPException(status_code=400, detail="file is required.")
     return await user_service.upload_profile_photo_unprotected(user_id=user_id, file=file)
+
+# -----------------------------------------------------------------
+#  BUYER – PROTECTED ENDPOINTS
+# -----------------------------------------------------------------
+@router.get(
+    "/buyers/me",
+    summary="Get My Buyer Profile (protected)",
+    description="Returns the authenticated buyer’s full profile."
+)
+async def get_my_buyer_profile_endpoint(current_user: dict = Depends(user_service.get_current_user)):
+    return await user_service.get_my_buyer_profile(current_user)
+
+
+# -----------------------------------------------------------------
+#  BUYER – UNPROTECTED PATCH /buyers/me
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
+#  BUYER – UNPROTECTED PATCH /buyers/me
+# -----------------------------------------------------------------
+@router.patch(
+    "/buyers/me",
+    summary="Update My Buyer Profile (unprotected)",
+    description="JSON body with fields: name, phone, deliveryAddress + user_id"
+)
+async def patch_buyers_me_unprotected(payload: Dict[str, Any] = Body(...)):
+    user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="user_id is required in request body.")
+
+    if "email" in payload:
+        raise HTTPException(status_code=400, detail="Email cannot be changed via this endpoint.")
+
+    allowed_keys = {"name", "phone", "deliveryAddress"}
+    updates = {k: v for k, v in payload.items() if k in allowed_keys}
+    if not updates:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    return await user_service.update_buyer_profile_unprotected(user_id=user_id, updates=updates)
