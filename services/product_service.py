@@ -176,7 +176,11 @@ async def create_new_product(user_id: str, images: List[UploadFile], voice_file:
         db.collection("product_stories").document(user_id).collection("products").document(product_id).set(final_data_for_db, merge=True)
 
         # --- 6. Auto-Post to Instagram ---
+        # --- MODIFIED ---
+        # This is commented out to allow for the new two-step publish flow.
         # await instagram_service.post_product(user_id, product_id)
+        print("Product created in Firestore. Skipping automatic Instagram post.")
+
 
         # --- 7. FIX: Create a JSON-serializable response ---
         response_data = final_data_for_db.copy()
@@ -519,3 +523,30 @@ async def update_product_partially(user_id: str, product_id: str, patch_data: Di
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to update product: {str(e)}")
+
+# --------------------------
+# 8. post_product_to_instagram (NEW)
+# --------------------------
+async def post_product_to_instagram(user_id: str, product_id: str):
+    """
+    Triggers an Instagram post for an *existing* product.
+    This is called by the 'Publish' button after user review.
+    """
+    if not db:
+        raise HTTPException(status_code=500, detail="Firebase is not initialized.")
+
+    # Check if product exists
+    product_ref = db.collection("product_stories").document(user_id).collection("products").document(product_id)
+    product_doc = product_ref.get()
+    if not product_doc.exists:
+        raise HTTPException(status_code=404, detail="Product not found, cannot post.")
+
+    try:
+        print(f"User consent received. Triggering Instagram post for product {product_id}...")
+        # This calls the same function your onboarding uses
+        await instagram_service.post_product(user_id, product_id)
+        return {"message": "Product successfully posted to Instagram."}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Instagram post failed: {str(e)}")
