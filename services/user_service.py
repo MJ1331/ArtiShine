@@ -460,3 +460,124 @@ async def upload_profile_photo_unprotected(
     except Exception as e:
         print(f"Upload failed: {e}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+    
+# --------------------------------------------------------------
+#  UNPROTECTED: Update buyer profile by user_id
+# --------------------------------------------------------------
+async def update_buyer_profile_unprotected(
+    user_id: str,
+    updates: dict
+):
+    """
+    Unprotected: Update buyer profile by user_id.
+    `updates` should be a dict with frontend keys: name, phone, deliveryAddress
+    Email changes are explicitly disallowed.
+    """
+    if not db:
+        raise HTTPException(status_code=500, detail="Firestore not initialized.")
+
+    # Disallow email modifications
+    if "email" in updates:
+        raise HTTPException(status_code=400, detail="Email cannot be changed via this endpoint.")
+
+    buyer_ref = db.collection("buyers").document(user_id)
+    doc = buyer_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Buyer not found")
+
+    # Map frontend keys to Firestore keys
+    field_map = {
+        "name": "name",
+        "phone": "phone",
+        "deliveryAddress": "delivery_address"
+    }
+
+    filtered = {}
+    for frontend_key, value in updates.items():
+        if value is None:
+            continue
+        if isinstance(value, str) and value.strip() == "":
+            continue
+
+        firestore_key = field_map.get(frontend_key)
+        if firestore_key:
+            filtered[firestore_key] = value
+        else:
+            print(f"Warning: Ignoring unknown field '{frontend_key}'")
+
+    if not filtered:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    # Audit metadata
+    filtered["profile_last_updated_at"] = datetime.now(timezone.utc).isoformat()
+    filtered["profile_last_updated_by"] = user_id
+
+    try:
+        buyer_ref.update(filtered)
+        print(f"Updated buyer {user_id}: {filtered}")
+        updated_doc = buyer_ref.get()
+        updated_data = updated_doc.to_dict() or {}
+        updated_data["user_id"] = updated_doc.id
+        return {"message": "Buyer profile updated", "updated_fields": list(filtered.keys()), "user": updated_data}
+    except Exception as e:
+        print(f"Firestore update failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Update failed: {str(e)}")
+
+
+# --------------------------------------------------------------
+#  UNPROTECTED: Upload profile photo (shared for artisans & buyers)
+# --------------------------------------------------------------
+async def upload_profile_photo_unprotected(
+    user_id: str,
+    file: UploadFile = File(...)
+):
+    """
+    Unprotected: Upload profile photo for the given user_id.
+    Works for both artisans and buyers (stores in their respective collections).
+    """
+    if not db:
+        raise HTTPException(status_code=500, detail="Firestore is not initialized.")
+
+    # Validate file
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image (JPEG/PNG)")
+
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:  # 5 MB
+        raise HTTPException(status_code=400, detail="Image too large (max 5 MB)")
+
+    # Try buyer first
+    buyer_ref = db.collection("buyers").document(user_id)
+    doc = buyer_ref.get()
+    collection = "buyers"
+    if not doc.exists:
+        # Fallback to artisan
+        artisan_ref = db.collection("artisans").document(user_id)
+        doc = artisan_ref.get()
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="User not found.")
+        buyer_ref = artisan_ref  # reuse variable
+        collection = "artisans"
+
+    try:
+        bucket = storage.bucket()
+        blob_path = f"profiles/{collection}/{user_id}/photo_{int(datetime.now().timestamp())}.jpg"
+        blob = bucket.blob(blob_path)
+
+        blob.upload_from_string(contents, content_type=file.content_type)
+        try:
+            blob.make_public()
+            photo_url = blob.public_url
+        except Exception:
+            photo_url = f"gs://{bucket.name}/{blob_path}"
+
+        buyer_ref.update({
+            "photo_url": photo_url,
+            "photo_updated_at": datetime.now(timezone.utc).isoformat()
+        })
+
+        print(f"Uploaded photo for {collection[:-1]} {user_id}: {photo_url}")
+        return {"message": "Photo uploaded", "photo_url": photo_url}
+    except Exception as e:
+        print(f"Upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")

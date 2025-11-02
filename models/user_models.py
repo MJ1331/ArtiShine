@@ -50,3 +50,15 @@ class ProfileUpdate(BaseModel):
 
     class Config:
         populate_by_name = True  # Allows using `shopName` in JSON, maps to `shop_name`
+
+class BuyerDetails(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    phone: Optional[str] = None
+    deliveryAddress: Optional[str] = None
+
+class BuyerUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    deliveryAddress: Optional[str] = None
